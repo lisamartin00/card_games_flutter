@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,32 +18,6 @@ class MyApp extends StatelessWidget {
 class CardGameList extends StatefulWidget {
   @override
   _CardGameListState createState() => _CardGameListState();
-}
-
-class _CardGameListState extends State<CardGameList> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Card Games'),
-      ),
-      body: _buildCards(),
-    );
-  }
-
-  Widget _buildCards() {
-    return Scrollbar(
-      child: ListView(
-          padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
-          children: [
-            for (final game in games(context))
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: CardGameItem(game: game),
-              ),
-          ]),
-    );
-  }
 }
 
 class CardGame {
@@ -66,6 +41,127 @@ class CardGame {
   final String howToPlayUrl;
   final bool requiresSpecialDeck;
   final String numPlayers;
+}
+
+class _CardGameListState extends State<CardGameList> {
+  void _handleCardTap(CardGame game) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          void _launchURL() async {
+            await launch(game.howToPlayUrl);
+          }
+
+          final tiles = [
+            ListTile(
+              title: Text('How to Play'),
+              trailing: Icon(Icons.link),
+              onTap: _launchURL,
+            ),
+            ListTile(
+              title: Text('Ages'),
+              trailing: Text(game.minAge.toString() + '+'),
+            ),
+            ListTile(
+              title: Text('Players'),
+              trailing: Text(game.numPlayers),
+            ),
+            ListTile(
+              title: Text('Special Deck?'),
+              trailing: Icon(
+                  game.requiresSpecialDeck ? Icons.check_box : Icons.close,
+                  color: game.requiresSpecialDeck
+                      ? Colors.green
+                      : Colors.red[700]),
+            )
+          ];
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(game.name),
+            ),
+            body: ListView(children: tiles),
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleAddGameTap() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Add a Card Game'),
+            ),
+            //body: ,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Card Games'),
+      ),
+      body: _buildCards(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _handleAddGameTap,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildCards() {
+    return Scrollbar(
+      child: ListView(
+          padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+          children: [
+            for (final game in games(context))
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: _buildCardGameItem(game),
+              ),
+          ]),
+    );
+  }
+
+  Widget _buildCardGameItem(CardGame game) {
+    // This height will allow for all the Card's content to fit comfortably within the card.
+    const height = 270.0;
+
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            SizedBox(
+              height: height,
+              child: Card(
+                // This ensures that the Card's children (including the ink splash) are clipped correctly.
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    _handleCardTap(game);
+                  },
+                  // Generally, material cards use onSurface with 12% opacity for the pressed state.
+                  splashColor:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
+                  // Generally, material cards do not have a highlight overlay.
+                  highlightColor: Colors.transparent,
+                  child: CardGameContent(game: game),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 List<CardGame> games(BuildContext context) => [
@@ -195,51 +291,6 @@ List<CardGame> games(BuildContext context) => [
       ),
     ];
 
-class CardGameItem extends StatelessWidget {
-  const CardGameItem({Key key, @required this.game, this.shape})
-      : assert(game != null),
-        super(key: key);
-
-  // This height will allow for all the Card's content to fit comfortably within the card.
-  static const height = 270.0;
-  final CardGame game;
-  final ShapeBorder shape;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          children: [
-            SizedBox(
-              height: height,
-              child: Card(
-                // This ensures that the Card's children (including the ink splash) are clipped correctly.
-                clipBehavior: Clip.antiAlias,
-                shape: shape,
-                child: InkWell(
-                  onTap: () {
-                    print('Card was tapped');
-                  },
-                  // Generally, material cards use onSurface with 12% opacity for the pressed state.
-                  splashColor:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
-                  // Generally, material cards do not have a highlight overlay.
-                  highlightColor: Colors.transparent,
-                  child: CardGameContent(game: game),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class SectionTitle extends StatelessWidget {
   const SectionTitle({
     Key key,
@@ -319,45 +370,3 @@ class CardGameContent extends StatelessWidget {
     );
   }
 }
-
-// return Scaffold(
-//   appBar: AppBar(
-//     // Here we take the value from the MyHomePage object that was created by
-//     // the App.build method, and use it to set our appbar title.
-//     title: Text(widget.title),
-//   ),
-//   body: Center(
-//     // Center is a layout widget. It takes a single child and positions it
-//     // in the middle of the parent.
-//     child: Column(
-//       // Column is also a layout widget. It takes a list of children and
-//       // arranges them vertically. By default, it sizes itself to fit its
-//       // children horizontally, and tries to be as tall as its parent.
-//       //
-//       // Invoke "debug painting" (press "p" in the console, choose the
-//       // "Toggle Debug Paint" action from the Flutter Inspector in Android
-//       // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-//       // to see the wireframe for each widget.
-//       //
-//       // Column has various properties to control how it sizes itself and
-//       // how it positions its children. Here we use mainAxisAlignment to
-//       // center the children vertically; the main axis here is the vertical
-//       // axis because Columns are vertical (the cross axis would be
-//       // horizontal).
-//       mainAxisAlignment: MainAxisAlignment.center,
-//       children: <Widget>[
-//         Text(
-//           'You have pushed the button this many times:',
-//         ),
-//         Text(
-//           '$_counter',
-//           style: Theme.of(context).textTheme.headline4,
-//         ),
-//       ],
-//     ),
-//   ),
-//   floatingActionButton: FloatingActionButton(
-//     onPressed: _incrementCounter,
-//     tooltip: 'Increment',
-//     child: Icon(Icons.add),
-//   ), // This trailing comma makes auto-formatting nicer for build methods.
