@@ -4,11 +4,23 @@ import './card_game_detail.dart';
 import './card_game_form.dart';
 
 class CardGameList extends StatefulWidget {
+  final CardGame newGame;
+
+  CardGameList({Key key, this.newGame}) : super(key: key);
+
   @override
   _CardGameListState createState() => _CardGameListState();
 }
 
 class _CardGameListState extends State<CardGameList> {
+  List<CardGame> gameList = games();
+
+  void _handleCardGameSave(CardGame game) {
+    setState(() {
+      gameList.insert(0, game);
+    });
+  }
+
   void _handleCardTap(CardGame game) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
