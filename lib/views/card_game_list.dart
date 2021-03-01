@@ -9,17 +9,15 @@ class CardGameList extends StatefulWidget {
   CardGameList({Key key, this.newGame}) : super(key: key);
 
   @override
-  _CardGameListState createState() => _CardGameListState();
+  _CardGameListState createState() => _CardGameListState(newGame: newGame);
 }
 
 class _CardGameListState extends State<CardGameList> {
-  List<CardGame> gameList = games();
+  final CardGame newGame;
 
-  void _handleCardGameSave(CardGame game) {
-    setState(() {
-      gameList.insert(0, game);
-    });
-  }
+  _CardGameListState({Key key, this.newGame});
+
+  List<CardGame> gameList = games();
 
   void _handleCardTap(CardGame game) {
     Navigator.of(context).push(
@@ -41,7 +39,14 @@ class _CardGameListState extends State<CardGameList> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
+    final hasNewGame = newGame == null || false;
+    if (hasNewGame) {
+      setState(() {
+        gameList.insert(0, newGame);
+      });
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text('Card Games'),

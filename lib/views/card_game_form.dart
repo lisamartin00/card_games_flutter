@@ -1,39 +1,28 @@
 import 'package:card_games_flutter/data/card_games.dart';
 import 'package:flutter/material.dart';
 import '../data/card_games.dart';
+import './card_game_list.dart';
 
 class CardGameForm extends StatelessWidget {
-  final Function onCardGameSave;
-
-  CardGameForm({Key key, @required this.onCardGameSave}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add a Card Game'),
       ),
-      body: CreateAGameForm(onCardGameSave: onCardGameSave),
+      body: CreateAGameForm(),
     );
   }
 }
 
 class CreateAGameForm extends StatefulWidget {
-  final Function onCardGameSave;
-
-  CreateAGameForm({Key key, @required this.onCardGameSave}) : super(key: key);
-
   @override
   CreateAGameFormState createState() {
-    return CreateAGameFormState(onSave: onCardGameSave);
+    return CreateAGameFormState();
   }
 }
 
 class CreateAGameFormState extends State<CreateAGameForm> {
-  final Function onSave;
-
-  CreateAGameFormState({Key key, @required this.onSave});
-
   final _formKey = GlobalKey<FormState>();
   String name;
   String howToPlayUrl;
@@ -126,17 +115,21 @@ class CreateAGameFormState extends State<CreateAGameForm> {
                       // Validate returns true if the form is valid, or false
                       // otherwise.
                       if (_formKey.currentState.validate()) {
-                        onSave(CardGame(
+                        final newGame = new CardGame(
                           name: name,
                           imgSrc: 'assets/defaultGame.jpg',
                           minAge: minAge,
                           howToPlayUrl: howToPlayUrl,
                           requiresSpecialDeck: doesRequireSpecialDeck,
                           numPlayers: numPlayers,
-                        ));
-                        // If the form is valid, display a Snackbar.
-                        Scaffold.of(context).showSnackBar(
-                            SnackBar(content: Text('Processing Data')));
+                        );
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (BuildContext context) {
+                              return new CardGameList(newGame: newGame);
+                            },
+                          ),
+                        );
                       }
                     },
                     child: Text('Submit'),
